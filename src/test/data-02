@@ -1,0 +1,19 @@
+(deflog qwe
+ (  delim* " "
+  (
+   (asd int)
+   (zxc str)a(b)c(c(c()d)d)d
+   (this +0 -123 +0.123 -234.456 + - 1 22 333 4444)
+  )
+ )" () " "" "\"""""()"("()")
+ "This is the \"%AA\" test ...
+ 
+        and that also ... \\\\
+ 
+                                                " "\\"
+"                                             SP               "
+)((((()))))"
+
+
+(1 22 333)
+"
