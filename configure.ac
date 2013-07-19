@@ -6,10 +6,6 @@ then
     CPP="clang-cpp"
 fi
 
-LD_LIBRARY_PATH=/home/mkushnir/lib
-LDFLAGS=-L/home/mkushnir/lib
-CFLAGS=-I/home/mkushnir/include
-
 AC_LANG(C)
 
 AC_PROG_CC
