@@ -93,10 +93,25 @@ ssize_t mrkdata_pack_datum(const mrkdata_datum_t *,
 mrkdata_spec_t *mrkdata_make_spec(mrkdata_tag_t);
 void mrkdata_spec_add_field(mrkdata_spec_t *, mrkdata_spec_t *);
 int mrkdata_spec_destroy(mrkdata_spec_t **);
+int mrkdata_spec_dump(mrkdata_spec_t *);
 int mrkdata_datum_destroy(mrkdata_datum_t **);
 int mrkdata_datum_dump(mrkdata_datum_t *);
 int mrkdata_datum_add_field(mrkdata_datum_t *, mrkdata_datum_t *);
+mrkdata_datum_t *mrkdata_datum_get_field(mrkdata_datum_t *, unsigned);
 mrkdata_datum_t *mrkdata_datum_from_spec(mrkdata_spec_t *, void *, size_t);
+mrkdata_datum_t *mrkdata_datum_make_u8(uint8_t);
+mrkdata_datum_t *mrkdata_datum_make_i8(int8_t);
+mrkdata_datum_t *mrkdata_datum_make_u16(uint16_t);
+mrkdata_datum_t *mrkdata_datum_make_i16(int16_t);
+mrkdata_datum_t *mrkdata_datum_make_u32(uint32_t);
+mrkdata_datum_t *mrkdata_datum_make_i32(int32_t);
+mrkdata_datum_t *mrkdata_datum_make_u64(uint64_t);
+mrkdata_datum_t *mrkdata_datum_make_i64(int64_t);
+mrkdata_datum_t *mrkdata_datum_make_double(double);
+mrkdata_datum_t *mrkdata_datum_make_str8(char *, int8_t);
+mrkdata_datum_t *mrkdata_datum_make_str16(char *, int16_t);
+mrkdata_datum_t *mrkdata_datum_make_str32(char *, int32_t);
+mrkdata_datum_t *mrkdata_datum_make_str64(char *, int64_t);
 
 #ifdef __cplusplus
 }

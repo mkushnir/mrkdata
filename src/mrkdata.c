@@ -434,6 +434,28 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
 
 
 /* spec */
+static int
+_mrkdata_spec_dump(mrkdata_spec_t *spec, int lvl)
+{
+    LTRACE(lvl, "<spec tag=%s>", MRKDATA_TAG_STR(spec->tag));
+    if (spec->tag == MRKDATA_STRUCT || spec->tag == MRKDATA_SEQ) {
+        list_iter_t it;
+        mrkdata_spec_t **field;
+        for (field = list_first(&spec->fields, &it);
+             field != NULL;
+             field = list_next(&spec->fields, &it)) {
+            _mrkdata_spec_dump(*field, lvl + 1);
+        }
+    }
+    return 0;
+}
+
+int
+mrkdata_spec_dump(mrkdata_spec_t *spec)
+{
+    return _mrkdata_spec_dump(spec, 0);
+}
+
 int
 mrkdata_spec_destroy(mrkdata_spec_t **spec)
 {
@@ -444,23 +466,6 @@ mrkdata_spec_destroy(mrkdata_spec_t **spec)
             free(*spec);
         }
 
-        *spec = NULL;
-    }
-    return 0;
-}
-
-UNUSED static int
-spec_fini(mrkdata_spec_t **spec)
-{
-    if (*spec != NULL) {
-
-        (*spec)->tag = -1;
-
-        if (*spec < builtin_specs ||
-            *spec >= (builtin_specs + countof(builtin_specs))) {
-
-            free(*spec);
-        }
         *spec = NULL;
     }
     return 0;
@@ -482,7 +487,7 @@ mrkdata_make_spec(mrkdata_tag_t tag)
     if (tag == MRKDATA_STRUCT || tag == MRKDATA_SEQ) {
         if (list_init(&spec->fields, sizeof(mrkdata_spec_t *), 0,
                        NULL,
-                       (list_finalizer_t)mrkdata_spec_destroy) != 0) {
+                       NULL) != 0) {
             FAIL("list_init");
         }
     }
@@ -773,6 +778,246 @@ mrkdata_datum_add_field(mrkdata_datum_t *dat, mrkdata_datum_t *field)
     return 0;
 }
 
+mrkdata_datum_t *
+mrkdata_datum_get_field(mrkdata_datum_t *dat, unsigned idx)
+{
+    mrkdata_datum_t **pfield;
+
+    assert(dat->spec->tag == MRKDATA_STRUCT || dat->spec->tag == MRKDATA_SEQ);
+
+    if ((pfield = list_get(&dat->data.fields, idx)) == NULL) {
+        return NULL;
+    }
+
+    return *pfield;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_u8(uint8_t v)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_UINT8];
+    res->packsz = EXPECT_SZ(MRKDATA_UINT8);
+    res->value.u8 = v;
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_i8(int8_t v)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_INT8];
+    res->packsz = EXPECT_SZ(MRKDATA_INT8);
+    res->value.i8 = v;
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_u16(uint16_t v)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_UINT16];
+    res->packsz = EXPECT_SZ(MRKDATA_UINT16);
+    res->value.u16 = v;
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_i16(int16_t v)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_INT16];
+    res->packsz = EXPECT_SZ(MRKDATA_INT16);
+    res->value.i16 = v;
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_u32(uint32_t v)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_UINT32];
+    res->packsz = EXPECT_SZ(MRKDATA_UINT32);
+    res->value.u32 = v;
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_i32(int32_t v)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_INT32];
+    res->packsz = EXPECT_SZ(MRKDATA_INT32);
+    res->value.i32 = v;
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_u64(uint64_t v)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_UINT64];
+    res->packsz = EXPECT_SZ(MRKDATA_UINT64);
+    res->value.u64 = v;
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_i64(int64_t v)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_INT64];
+    res->packsz = EXPECT_SZ(MRKDATA_INT64);
+    res->value.i64 = v;
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_double(double v)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_DOUBLE];
+    res->packsz = EXPECT_SZ(MRKDATA_DOUBLE);
+    res->value.d = v;
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_str8(char *v, int8_t sz)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_STR8];
+    res->packsz = EXPECT_SZ(MRKDATA_STR8) + sz;
+    res->value.sz8 = sz;
+    if ((res->data.str = malloc(sz)) == NULL) {
+        FAIL("malloc");
+    }
+    if (v != NULL) {
+        memcpy(res->data.str, v, sz);
+    } else {
+        memset(res->data.str, '\0', sz);
+    }
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_str16(char *v, int16_t sz)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_STR16];
+    res->packsz = EXPECT_SZ(MRKDATA_STR16) + sz;
+    res->value.sz16 = sz;
+    if ((res->data.str = malloc(sz)) == NULL) {
+        FAIL("malloc");
+    }
+    if (v != NULL) {
+        memcpy(res->data.str, v, sz);
+    } else {
+        memset(res->data.str, '\0', sz);
+    }
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_str32(char *v, int32_t sz)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_STR32];
+    res->packsz = EXPECT_SZ(MRKDATA_STR32) + sz;
+    res->value.sz32 = sz;
+    if ((res->data.str = malloc(sz)) == NULL) {
+        FAIL("malloc");
+    }
+    if (v != NULL) {
+        memcpy(res->data.str, v, sz);
+    } else {
+        memset(res->data.str, '\0', sz);
+    }
+    return res;
+}
+
+mrkdata_datum_t *
+mrkdata_datum_make_str64(char *v, int64_t sz)
+{
+    mrkdata_datum_t *res;
+
+    if ((res = malloc(sizeof(mrkdata_datum_t))) == NULL) {
+        FAIL("malloc");
+    }
+    datum_init(res);
+    res->spec = &builtin_specs[MRKDATA_STR64];
+    res->packsz = EXPECT_SZ(MRKDATA_STR64) + sz;
+    res->value.sz64 = sz;
+    if ((res->data.str = malloc(sz)) == NULL) {
+        FAIL("malloc");
+    }
+    if (v != NULL) {
+        memcpy(res->data.str, v, sz);
+    } else {
+        memset(res->data.str, '\0', sz);
+    }
+    return res;
+}
 
 /* module */
 void
