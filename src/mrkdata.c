@@ -194,7 +194,14 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
 
     tag = (mrkdata_tag_t)(*buf);
 
+#ifdef __GNUC__
+    /*
+     * I don't know how to silent the "always true" warning here, sigh ...
+     */
+    assert(tag < MRKDATA_TAG_END);
+#else
     assert(tag >= 0 && tag < MRKDATA_TAG_END);
+#endif
 
     if (tag != spec->tag) {
         return 0;
@@ -537,28 +544,28 @@ mrkdata_datum_from_spec(mrkdata_spec_t *spec, void *v, size_t sz)
     res->packsz = EXPECT_SZ(spec->tag);
 
     if (spec->tag == MRKDATA_UINT8) {
-        res->value.u8 = (uint8_t)v;
+        res->value.u8 = (uint8_t)(uintptr_t)v;
 
     } else if (spec->tag == MRKDATA_INT8) {
-        res->value.i8 = (int8_t)v;
+        res->value.i8 = (int8_t)(uintptr_t)v;
 
     } else if (spec->tag == MRKDATA_UINT16) {
-        res->value.u16 = (uint16_t)v;
+        res->value.u16 = (uint16_t)(uintptr_t)v;
 
     } else if (spec->tag == MRKDATA_INT16) {
-        res->value.i16 = (int16_t)v;
+        res->value.i16 = (int16_t)(uintptr_t)v;
 
     } else if (spec->tag == MRKDATA_UINT32) {
-        res->value.u32 = (uint32_t)v;
+        res->value.u32 = (uint32_t)(uintptr_t)v;
 
     } else if (spec->tag == MRKDATA_INT32) {
-        res->value.i32 = (int32_t)v;
+        res->value.i32 = (int32_t)(uintptr_t)v;
 
     } else if (spec->tag == MRKDATA_UINT64) {
-        res->value.u64 = (uint64_t)v;
+        res->value.u64 = (uint64_t)(uintptr_t)v;
 
     } else if (spec->tag == MRKDATA_INT64) {
-        res->value.i64 = (int64_t)v;
+        res->value.i64 = (int64_t)(uintptr_t)v;
 
     } else if (spec->tag == MRKDATA_STR8) {
         res->value.sz8 = (int8_t)sz;

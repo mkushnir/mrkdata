@@ -13,7 +13,7 @@ lib_LTLIBRARIES = libmrkdata.la libfparser.la
 nobase_include_HEADERS = mrkdata.h fparser.h
 
 if DEBUG
-DEBUG_FLAGS = -g -O0 -ftrapv -fcatch-undefined-behavior
+DEBUG_FLAGS = -g -O0 $(CLANG_DEBUG)
 else
 DEBUG_FLAGS = -DNDEBUG -O3
 endif
