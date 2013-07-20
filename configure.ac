@@ -4,8 +4,7 @@ then
     CC="clang -Qunused-arguments -fcolor-diagnostics"
     CXX="clang++ -Qunused-arguments -fcolor-diagnostics"
     CPP="clang-cpp"
-else
-    CLANG_DEBUG='-ftrapv -fcatch-undefined-behavior'
+    AC_SUBST(CLANG_DEBUG, ['-ftrapv -fcatch-undefined-behavior'])
 fi
 
 AC_LANG(C)
