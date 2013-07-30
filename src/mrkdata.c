@@ -668,7 +668,7 @@ _mrkdata_datum_dump(mrkdata_datum_t *dat, int lvl)
 
         switch (dat->spec->tag) {
         case MRKDATA_UINT8:
-            TRACEC("%hhu>", dat->value.u8);
+            TRACEC("%02hhx>", dat->value.u8);
             break;
 
         case MRKDATA_INT8:
@@ -676,7 +676,7 @@ _mrkdata_datum_dump(mrkdata_datum_t *dat, int lvl)
             break;
 
         case MRKDATA_UINT16:
-            TRACEC("%hu>", dat->value.u16);
+            TRACEC("%04hx>", dat->value.u16);
             break;
 
         case MRKDATA_INT16:
@@ -684,7 +684,7 @@ _mrkdata_datum_dump(mrkdata_datum_t *dat, int lvl)
             break;
 
         case MRKDATA_UINT32:
-            TRACEC("%u>", dat->value.u32);
+            TRACEC("%08x>", dat->value.u32);
             break;
 
         case MRKDATA_INT32:
@@ -692,7 +692,7 @@ _mrkdata_datum_dump(mrkdata_datum_t *dat, int lvl)
             break;
 
         case MRKDATA_UINT64:
-            TRACEC("%lu>", dat->value.u64);
+            TRACEC("%016lx>", dat->value.u64);
             break;
 
         case MRKDATA_INT64:
@@ -769,7 +769,7 @@ mrkdata_datum_destroy(mrkdata_datum_t **dat)
     return 0;
 }
 
-int
+void
 mrkdata_datum_add_field(mrkdata_datum_t *dat, mrkdata_datum_t *field)
 {
     mrkdata_datum_t **pdat;
@@ -782,7 +782,6 @@ mrkdata_datum_add_field(mrkdata_datum_t *dat, mrkdata_datum_t *field)
 
     *pdat = field;
     mrkdata_datum_adjust_packsz(dat, field->packsz);
-    return 0;
 }
 
 mrkdata_datum_t *

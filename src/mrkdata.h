@@ -96,7 +96,7 @@ int mrkdata_spec_destroy(mrkdata_spec_t **);
 int mrkdata_spec_dump(mrkdata_spec_t *);
 int mrkdata_datum_destroy(mrkdata_datum_t **);
 int mrkdata_datum_dump(mrkdata_datum_t *);
-int mrkdata_datum_add_field(mrkdata_datum_t *, mrkdata_datum_t *);
+void mrkdata_datum_add_field(mrkdata_datum_t *, mrkdata_datum_t *);
 mrkdata_datum_t *mrkdata_datum_get_field(mrkdata_datum_t *, unsigned);
 mrkdata_datum_t *mrkdata_datum_from_spec(mrkdata_spec_t *, void *, size_t);
 mrkdata_datum_t *mrkdata_datum_make_u8(uint8_t);
