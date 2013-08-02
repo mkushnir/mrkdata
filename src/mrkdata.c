@@ -189,26 +189,17 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
 
     if (*pdat == NULL) {
         *pdat = malloc(sizeof(mrkdata_datum_t));
+        datum_init(*pdat);
+        (*pdat)->spec = spec;
+
     }
     dat = *pdat;
 
     tag = (mrkdata_tag_t)(*buf);
 
-#ifdef __GNUC__
-    /*
-     * I don't know how to silent the "always true" warning here, sigh ...
-     */
-    assert(tag < MRKDATA_TAG_END);
-#else
-    assert(tag >= 0 && tag < MRKDATA_TAG_END);
-#endif
-
     if (tag != spec->tag) {
         return 0;
     }
-
-    datum_init(dat);
-    dat->spec = spec;
 
     valsz = EXPECT_SZ(spec->tag);
 
@@ -219,7 +210,6 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
     /* must be *after* the above test */
     buf += sizeof(char);
     sz -= sizeof(char);
-
 
     dat->packsz = valsz;
 
@@ -427,6 +417,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
             buf += nread_single;
             sz -= nread_single;
             nread += nread_single;
+
         }
 
         break;
