@@ -190,7 +190,6 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
     if (*pdat == NULL) {
         *pdat = malloc(sizeof(mrkdata_datum_t));
         datum_init(*pdat);
-        (*pdat)->spec = spec;
 
     }
     dat = *pdat;
@@ -200,6 +199,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
     if (tag != spec->tag) {
         return 0;
     }
+    (*pdat)->spec = spec;
 
     valsz = EXPECT_SZ(spec->tag);
 
@@ -730,20 +730,22 @@ mrkdata_datum_dump(mrkdata_datum_t *dat)
 static int
 datum_fini(mrkdata_datum_t *dat)
 {
-    if (dat->spec->tag == MRKDATA_STR8 ||
-        dat->spec->tag == MRKDATA_STR16 ||
-        dat->spec->tag == MRKDATA_STR32 ||
-        dat->spec->tag == MRKDATA_STR64) {
+    if (dat->spec != NULL) {
+        if (dat->spec->tag == MRKDATA_STR8 ||
+            dat->spec->tag == MRKDATA_STR16 ||
+            dat->spec->tag == MRKDATA_STR32 ||
+            dat->spec->tag == MRKDATA_STR64) {
 
-        if (dat->data.str != NULL) {
-            free(dat->data.str);
-            dat->data.str = NULL;
+            if (dat->data.str != NULL) {
+                free(dat->data.str);
+                dat->data.str = NULL;
+            }
+        } else if (dat->spec->tag == MRKDATA_STRUCT || dat->spec->tag == MRKDATA_SEQ) {
+            list_fini(&dat->data.fields);
         }
-    } else if (dat->spec->tag == MRKDATA_STRUCT || dat->spec->tag == MRKDATA_SEQ) {
-        list_fini(&dat->data.fields);
-    }
 
-    dat->spec = NULL;
+        dat->spec = NULL;
+    }
     dat->parent = NULL;
     dat->packsz = 0;
     return 0;
