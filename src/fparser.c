@@ -10,7 +10,7 @@
 #include "fparser_private.h"
 
 #define BLOCKSZ (4096 * 8)
-#define NEEDMORE 1
+#define NEEDMORE (-1)
 
 static int fparser_datum_init(fparser_datum_t *, mrkdata_tag_t);
 static int fparser_datum_fini(fparser_datum_t *);
@@ -67,7 +67,7 @@ tokenize(const unsigned char *buf, ssize_t buflen,
                 state = LEX_TOKOUT;
                 /* extra call back */
                 if (cb(buf, i, state, udata) != 0) {
-                    TRRET(TOKENIZE + 1);
+                    TRRET(TOKENIZE + 2);
                 }
                 state = LEX_SEQOUT;
 
@@ -173,7 +173,7 @@ tokenize(const unsigned char *buf, ssize_t buflen,
                 state = LEX_TOKOUT;
                 /* extra call back */
                 if (cb(buf, i, state, udata) != 0) {
-                    TRRET(TOKENIZE + 1);
+                    TRRET(TOKENIZE + 3);
                 }
                 state = LEX_COMIN;
 
@@ -213,7 +213,7 @@ tokenize(const unsigned char *buf, ssize_t buflen,
 
         if (state & LEX_NEEDCB) {
             if (cb(buf, i, state, udata) != 0) {
-                TRRET(TOKENIZE + 1);
+                TRRET(TOKENIZE + 4);
             }
         }
     }

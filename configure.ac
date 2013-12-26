@@ -17,7 +17,7 @@ else
         then
             AC_SUBST(CLANG_DEBUG, ['-ftrapv -fcatch-undefined-behavior'])
         else
-            AC_SUBST(CLANG_DEBUG, ['-ftrapv -fsanitize=undefined-trap -fsanitize-undefined-trap-on-error'])
+            AC_SUBST(CLANG_DEBUG, ['-ftrapv -fsanitize=undefined-trap -fsanitize-undefined-trap-on-error -fno-sanitize=alignment'])
         fi
     else
         CC="cc"
