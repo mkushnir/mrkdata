@@ -8,11 +8,11 @@
 #include "mrkcommon/dumpm.h"
 #include "mrkcommon/util.h"
 
-#include "mrkcommon/memdebug.h"
-MEMDEBUG_DECLARE(mrkdata);
-
 #include "diag.h"
 #include "mrkdata_private.h"
+
+#include "mrkcommon/memdebug.h"
+MEMDEBUG_DECLARE(mrkdata);
 
 #define MRKDATA_MFLAG_INITIALIZED (0x01)
 static unsigned mflags = 0;
@@ -335,17 +335,17 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         buf += sizeof(int64_t);
         sz -= sizeof(int64_t);
 
-        if (sz < dat->value.sz64) {
-            return 0;
-        }
-
-        dat->packsz += dat->value.sz64;
-
         if (list_init(&dat->data.fields, sizeof(mrkdata_datum_t *), 0,
                       (list_initializer_t)null_pointer_initializer,
                       (list_finalizer_t)mrkdata_datum_destroy) != 0) {
             FAIL("list_init");
         }
+
+        if (sz < dat->value.sz64) {
+            return 0;
+        }
+
+        dat->packsz += dat->value.sz64;
 
         for (field_spec = list_first(&spec->fields, &it);
              field_spec != NULL;
@@ -380,6 +380,12 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         buf += sizeof(int64_t);
         sz -= sizeof(int64_t);
 
+        if (list_init(&dat->data.fields, sizeof(mrkdata_datum_t *), 0,
+                      (list_initializer_t)null_pointer_initializer,
+                      (list_finalizer_t)mrkdata_datum_destroy) != 0) {
+            FAIL("list_init");
+        }
+
         if (sz < dat->value.sz64) {
             return 0;
         }
@@ -389,12 +395,6 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         }
 
         dat->packsz += dat->value.sz64;
-
-        if (list_init(&dat->data.fields, sizeof(mrkdata_datum_t *), 0,
-                      (list_initializer_t)null_pointer_initializer,
-                      (list_finalizer_t)mrkdata_datum_destroy) != 0) {
-            FAIL("list_init");
-        }
 
         field_spec = list_first(&spec->fields, &it);
 

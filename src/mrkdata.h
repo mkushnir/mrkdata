@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+const char *mrkdata_diag_str(int);
+
 typedef enum _mrkdata_tag {
     MRKDATA_UINT8,
     MRKDATA_INT8,

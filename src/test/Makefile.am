@@ -26,7 +26,7 @@ testfparser_CFLAGS = $(DEBUG_FLAGS) -Wall -Wextra -Werror -std=c99 -I.. -I$(incl
 testfparser_LDFLAGS = -L$(libdir) -lmrkcommon -lmrkdata -lfparser
 
 ../diag.c ../diag.h: ../diag.txt
-	sh ../gen-diag
+	sh ../gen-diag mrkdata
 
 testrun: all
 	for i in $(noinst_PROGRAMS); do if test -x ./$$i; then LD_LIBRARY_PATH=$(libdir) ./$$i; fi; done;
