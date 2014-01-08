@@ -183,7 +183,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
 
     assert(pdat != NULL);
 
-    if (sz == 0) {
+    if (sz <= 0) {
         return 0;
     }
 
@@ -225,7 +225,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         break;
 
     case MRKDATA_INT8:
-        dat->value.i8 = *buf;
+        dat->value.i8 = *((const char *)buf);
         buf += sizeof(int8_t);
         sz -= sizeof(int8_t);
         break;
@@ -234,7 +234,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         dat->value.sz8 = *buf;
         buf += sizeof(int8_t);
         sz -= sizeof(int8_t);
-        if (sz < dat->value.sz8) {
+        if (sz < dat->value.sz8 || dat->value.sz8 < 0) {
             return 0;
         }
         dat->packsz += dat->value.sz8;
@@ -262,7 +262,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         dat->value.sz16 = ntohs(*((int16_t *)buf));
         buf += sizeof(int16_t);
         sz -= sizeof(int16_t);
-        if (sz < dat->value.sz16) {
+        if (sz < dat->value.sz16 || dat->value.sz16 < 0) {
             return 0;
         }
         dat->packsz += dat->value.sz16;
@@ -290,7 +290,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         dat->value.sz32 = ntohl(*((int32_t *)buf));
         buf += sizeof(int32_t);
         sz -= sizeof(int32_t);
-        if (sz < dat->value.sz32) {
+        if (sz < dat->value.sz32 || dat->value.sz32 < 0) {
             return 0;
         }
         dat->packsz += dat->value.sz32;
@@ -318,7 +318,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         dat->value.sz64 = be64toh(*((int64_t *)buf));
         buf += sizeof(int64_t);
         sz -= sizeof(int64_t);
-        if (sz < dat->value.sz64) {
+        if (sz < dat->value.sz64 || dat->value.sz64 < 0) {
             return 0;
         }
         dat->packsz += dat->value.sz64;
@@ -341,7 +341,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
             FAIL("list_init");
         }
 
-        if (sz < dat->value.sz64) {
+        if (sz < dat->value.sz64 || dat->value.sz64 < 0) {
             return 0;
         }
 
@@ -386,7 +386,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
             FAIL("list_init");
         }
 
-        if (sz < dat->value.sz64) {
+        if (sz < dat->value.sz64 || dat->value.sz64 < 0) {
             return 0;
         }
 
@@ -431,9 +431,213 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
 }
 
 
+ssize_t
+mrkdata_parse_buf(const unsigned char *buf,
+                  ssize_t sz,
+                  int (*cb)(const unsigned char *,
+                            mrkdata_tag_t,
+                            ssize_t,
+                            void *),
+                  void *udata)
+{
+    mrkdata_tag_t tag;
+    ssize_t valsz;
+    ssize_t parsesz;
+
+    if (sz == 0) {
+        return 0;
+    }
+
+    tag = (mrkdata_tag_t)(*buf);
+
+    valsz = EXPECT_SZ(tag);
+
+    if (sz < valsz) {
+        return 0;
+    }
+
+    /* must be *after* the above test */
+    buf += sizeof(char);
+    sz -= sizeof(char);
+    parsesz = valsz;
+
+    switch (tag) {
+        int8_t sz8;
+        int16_t sz16;
+        int32_t sz32;
+        int64_t sz64;
+
+    case MRKDATA_UINT8:
+        if (cb(buf, tag, valsz, udata) != 0) {
+            return 0;
+        }
+        buf += sizeof(uint8_t);
+        sz -= sizeof(uint8_t);
+        break;
+
+    case MRKDATA_INT8:
+        if (cb(buf, tag, valsz, udata) != 0) {
+            return 0;
+        }
+        buf += sizeof(int8_t);
+        sz -= sizeof(int8_t);
+        break;
+
+    case MRKDATA_STR8:
+        sz8 = *((const char *)buf);
+        buf += sizeof(int8_t);
+        sz -= sizeof(int8_t);
+        if (sz < sz8 || sz8 < 0) {
+            return 0;
+        }
+        if (cb(buf, tag, (ssize_t)sz8, udata) != 0) {
+            return 0;
+        }
+        parsesz += sz8;
+        buf += sz8;
+        sz -= sz8;
+        break;
+
+    case MRKDATA_UINT16:
+        if (cb(buf, tag, valsz, udata) != 0) {
+            return 0;
+        }
+        buf += sizeof(uint16_t);
+        sz -= sizeof(uint16_t);
+        break;
+
+    case MRKDATA_INT16:
+        if (cb(buf, tag, valsz, udata) != 0) {
+            return 0;
+        }
+        buf += sizeof(int16_t);
+        sz -= sizeof(int16_t);
+        break;
+
+    case MRKDATA_STR16:
+        sz16 = ntohs(*((int16_t *)buf));
+        buf += sizeof(int16_t);
+        sz -= sizeof(int16_t);
+        if (sz < sz16 || sz16 < 0) {
+            return 0;
+        }
+        if (cb(buf, tag, (ssize_t)sz16, udata) != 0) {
+            return 0;
+        }
+        parsesz += sz16;
+        buf += sz16;
+        sz -= sz16;
+        break;
+
+    case MRKDATA_UINT32:
+        if (cb(buf, tag, valsz, udata) != 0) {
+            return 0;
+        }
+        buf += sizeof(uint32_t);
+        sz -= sizeof(uint32_t);
+        break;
+
+    case MRKDATA_INT32:
+        if (cb(buf, tag, valsz, udata) != 0) {
+            return 0;
+        }
+        buf += sizeof(int32_t);
+        sz -= sizeof(int32_t);
+        break;
+
+    case MRKDATA_STR32:
+        sz32 = ntohl(*((int32_t *)buf));
+        buf += sizeof(int32_t);
+        sz -= sizeof(int32_t);
+        if (sz < sz32 || sz32 < 0) {
+            return 0;
+        }
+        if (cb(buf, tag, (ssize_t)sz32, udata) != 0) {
+            return 0;
+        }
+        parsesz += sz32;
+        buf += sz32;
+        sz -= sz32;
+        break;
+
+    case MRKDATA_UINT64:
+        if (cb(buf, tag, valsz, udata) != 0) {
+            return 0;
+        }
+        buf += sizeof(uint64_t);
+        sz -= sizeof(uint64_t);
+        break;
+
+    case MRKDATA_INT64:
+        if (cb(buf, tag, valsz, udata) != 0) {
+            return 0;
+        }
+        buf += sizeof(int64_t);
+        sz -= sizeof(int64_t);
+        break;
+
+    case MRKDATA_STR64:
+        sz64 = be64toh(*((int64_t *)buf));
+        buf += sizeof(int64_t);
+        sz -= sizeof(int64_t);
+        if (sz < sz64 || sz64 < 0) {
+            return 0;
+        }
+        if (cb(buf, tag, (ssize_t)sz64, udata) != 0) {
+            return 0;
+        }
+        parsesz += sz64;
+        buf += sz64;
+        sz -= sz64;
+        break;
+
+    case MRKDATA_STRUCT:
+        sz64 = be64toh(*((int64_t *)buf));
+        buf += sizeof(int64_t);
+        sz -= sizeof(int64_t);
+
+        if (sz < sz64 || sz64 < 0) {
+            return 0;
+        }
+
+        if (cb(buf, tag, (ssize_t)sz64, udata) != 0) {
+            return 0;
+        }
+
+        parsesz += sz64;
+
+        break;
+
+
+    case MRKDATA_SEQ:
+        sz64 = be64toh(*((int64_t *)buf));
+        buf += sizeof(int64_t);
+        sz -= sizeof(int64_t);
+
+        if (sz < sz64 || sz64 < 0) {
+            return 0;
+        }
+
+        if (cb(buf, tag, (ssize_t)sz64, udata) != 0) {
+            return 0;
+        }
+
+        parsesz += sz64;
+
+        break;
+
+
+    default:
+        assert(0);
+    }
+
+    return parsesz;
+}
+
+
 /* spec */
 static int
-_mrkdata_spec_dump(mrkdata_spec_t *spec, int lvl)
+spec_dump(mrkdata_spec_t *spec, int lvl)
 {
     LTRACE(lvl, "<spec tag=%s>", MRKDATA_TAG_STR(spec->tag));
     if (spec->tag == MRKDATA_STRUCT || spec->tag == MRKDATA_SEQ) {
@@ -442,7 +646,7 @@ _mrkdata_spec_dump(mrkdata_spec_t *spec, int lvl)
         for (field = list_first(&spec->fields, &it);
              field != NULL;
              field = list_next(&spec->fields, &it)) {
-            _mrkdata_spec_dump(*field, lvl + 1);
+            spec_dump(*field, lvl + 1);
         }
     }
     return 0;
@@ -451,7 +655,7 @@ _mrkdata_spec_dump(mrkdata_spec_t *spec, int lvl)
 int
 mrkdata_spec_dump(mrkdata_spec_t *spec)
 {
-    return _mrkdata_spec_dump(spec, 0);
+    return spec_dump(spec, 0);
 }
 
 int
@@ -641,7 +845,7 @@ ERR:
 }
 
 static int
-_mrkdata_datum_dump(mrkdata_datum_t *dat, int lvl)
+datum_dump(mrkdata_datum_t *dat, int lvl)
 {
     if (dat->spec->tag == MRKDATA_STRUCT || dat->spec->tag == MRKDATA_SEQ) {
         mrkdata_datum_t **o;
@@ -652,7 +856,7 @@ _mrkdata_datum_dump(mrkdata_datum_t *dat, int lvl)
         for (o = list_first(&dat->data.fields, &it);
              o != NULL;
              o = list_next(&dat->data.fields, &it)) {
-            _mrkdata_datum_dump(*o, lvl + 1);
+            datum_dump(*o, lvl + 1);
         }
     } else {
         LTRACEN(lvl, "<datum tag=%s value=", MRKDATA_TAG_STR(dat->spec->tag));
@@ -724,7 +928,7 @@ _mrkdata_datum_dump(mrkdata_datum_t *dat, int lvl)
 int
 mrkdata_datum_dump(mrkdata_datum_t *dat)
 {
-    return _mrkdata_datum_dump(dat, 0);
+    return datum_dump(dat, 0);
 }
 
 static int

@@ -85,13 +85,20 @@ typedef struct _mrkdata_datum {
 
 void mrkdata_init(void);
 void mrkdata_fini(void);
+ssize_t mrkdata_parse_buf(const unsigned char *buf,
+                          ssize_t sz,
+                          int (*cb)(const unsigned char *,
+                                    mrkdata_tag_t,
+                                    ssize_t,
+                                    void *),
+                          void *udata);
 ssize_t mrkdata_unpack_buf(const mrkdata_spec_t *,
-                          const unsigned char *,
-                          ssize_t,
-                          mrkdata_datum_t **);
+                           const unsigned char *,
+                           ssize_t,
+                           mrkdata_datum_t **);
 ssize_t mrkdata_pack_datum(const mrkdata_datum_t *,
-                            unsigned char *,
-                            ssize_t);
+                           unsigned char *,
+                           ssize_t);
 mrkdata_spec_t *mrkdata_make_spec(mrkdata_tag_t);
 void mrkdata_spec_add_field(mrkdata_spec_t *, mrkdata_spec_t *);
 int mrkdata_spec_destroy(mrkdata_spec_t **);
