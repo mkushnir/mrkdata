@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-#include "mrkcommon/list.h"
+#include "mrkcommon/array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,6 +11,9 @@ extern "C" {
 
 const char *mrkdata_diag_str(int);
 
+/*
+ * Sync with tag_sz[]
+ */
 typedef enum _mrkdata_tag {
     MRKDATA_UINT8,
     MRKDATA_INT8,
@@ -25,9 +28,25 @@ typedef enum _mrkdata_tag {
     MRKDATA_STR16,
     MRKDATA_STR32,
     MRKDATA_STR64,
+    /*
+     * End of built-in specs.
+     *
+     * Below are tags for user-defined specs.
+     */
     MRKDATA_STRUCT,
     MRKDATA_SEQ,
+    MRKDATA_DICT,
+    MRKDATA_FUNC,
 } mrkdata_tag_t;
+
+#define MRKDATA_BUILTIN_TAG_END (MRKDATA_STR64 + 1)
+#define MRKDATA_TAG_END (MRKDATA_FUNC + 1)
+
+#define MRKDATA_TAG_CUSTOM(tag) \
+    ((tag) == MRKDATA_STRUCT || \
+     (tag) == MRKDATA_SEQ || \
+     (tag) == MRKDATA_DICT || \
+     (tag) == MRKDATA_FUNC)
 
 #define MRKDATA_TAG_STR(tag) \
     (tag == MRKDATA_UINT8 ? "UINT8" : \
@@ -45,16 +64,20 @@ typedef enum _mrkdata_tag {
      tag == MRKDATA_STR64 ? "STR64" : \
      tag == MRKDATA_STRUCT ? "STRUCT" : \
      tag == MRKDATA_SEQ ? "SEQ" : \
+     tag == MRKDATA_DICT ? "DICT" : \
+     tag == MRKDATA_FUNC ? "FUNC" : \
      "")
-
-#define MRKDATA_BUILTIN_TAG_END (MRKDATA_STR64 + 1)
-#define MRKDATA_TAG_END (MRKDATA_SEQ + 1)
 
 struct _mrkdata_datum;
 
 typedef struct _mrkdata_spec {
+    /*
+     * "custom" name, for structure members and function formal
+     * parameters
+     */
+    char *name;
+    array_t fields;
     mrkdata_tag_t tag;
-    list_t fields;
 } mrkdata_spec_t;
 
 typedef struct _mrkdata_datum {
@@ -76,7 +99,7 @@ typedef struct _mrkdata_datum {
     } value;
     union {
         char *str;
-        list_t fields;
+        array_t fields;
     } data;
     ssize_t packsz;
     struct _mrkdata_datum *parent;
@@ -100,6 +123,7 @@ ssize_t mrkdata_pack_datum(const mrkdata_datum_t *,
                            unsigned char *,
                            ssize_t);
 mrkdata_spec_t *mrkdata_make_spec(mrkdata_tag_t);
+void mrkdata_spec_set_name(mrkdata_spec_t *, const char *);
 void mrkdata_spec_add_field(mrkdata_spec_t *, mrkdata_spec_t *);
 int mrkdata_spec_destroy(mrkdata_spec_t **);
 int mrkdata_spec_dump(mrkdata_spec_t *);

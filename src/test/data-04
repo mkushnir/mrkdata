@@ -1,0 +1,39 @@
+;# deflog defvar defun defquery int str float array dict struct bool timestamp w3cdate w3ctime ftime select group where having
+;# if and or not xor + - == != * / % bit
+;# SUM MIN MAX
+;#
+;#
+(deflog qwe
+ :timestamp-index 0
+ (struct
+  :delim "\t"
+  (timestamp timestamp)
+  (ip str)
+  (foo int)
+  (bar int)
+  (account_id int)
+  (cookie (dict ";" "="))
+  (status (struct :delim "/" (code int) (verb str)))
+ )
+)
+
+(defvar :lazy thing1 "one")
+(defvar :lazy thing2 (+ 1 2 account_id))
+(defun fun1
+ ((arg1 int) (arg2 int))
+ (
+  (defvar thing1 (+ arg1 thing2))
+  (* thing1 arg2)
+ )
+)
+
+(defvar is_valid_account_id (!= account_id 0))
+
+(defquery 123
+ (defvar thing1 "-THING 1")
+ (group (concat ip thing1))
+ (select (SUM (* foo 2)) (MAX (fun1 foo (- foo bar))))
+ (where is_valid_account_id)
+)
+
+

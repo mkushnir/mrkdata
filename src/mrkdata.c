@@ -2,9 +2,8 @@
 #include <netinet/in.h>
 #include <sys/endian.h>
 
-#include "mrkcommon/list.h"
 #include "mrkcommon/array.h"
-#define TRRET_DEBUG
+//#define TRRET_DEBUG
 #include "mrkcommon/dumpm.h"
 #include "mrkcommon/util.h"
 
@@ -17,7 +16,9 @@ MEMDEBUG_DECLARE(mrkdata);
 #define MRKDATA_MFLAG_INITIALIZED (0x01)
 static unsigned mflags = 0;
 
-/* sync with enum _mrkdata_tag */
+/*
+ * Sync with enum _mrkdata_tag
+ */
 static ssize_t
 tag_sz[] = {
     sizeof(uint8_t),    /* UINT8 */
@@ -35,6 +36,8 @@ tag_sz[] = {
     sizeof(uint64_t),   /* STR64 sz */
     sizeof(uint64_t),   /* STRUCT sz */
     sizeof(uint64_t),   /* SEQ sz */
+    sizeof(uint64_t),   /* DICT sz */
+    sizeof(uint64_t),   /* FUNC sz */
 };
 
 static mrkdata_spec_t builtin_specs[MRKDATA_BUILTIN_TAG_END];
@@ -80,7 +83,7 @@ mrkdata_pack_datum(const mrkdata_datum_t *dat, unsigned char *buf, ssize_t sz)
     switch (dat->spec->tag) {
         ssize_t nwritten;
         mrkdata_datum_t **field;
-        list_iter_t it;
+        array_iter_t it;
 
         case MRKDATA_UINT8:
             *((uint8_t *)buf) = dat->value.u8;
@@ -147,9 +150,9 @@ mrkdata_pack_datum(const mrkdata_datum_t *dat, unsigned char *buf, ssize_t sz)
             *((int64_t *)buf) = htobe64(dat->value.sz64);
             buf += sizeof(int64_t);
             sz -= sizeof(int64_t);
-            for (field = list_first(&dat->data.fields, &it);
+            for (field = array_first(&dat->data.fields, &it);
                  field != NULL;
-                 field = list_next(&dat->data.fields, &it)) {
+                 field = array_next(&dat->data.fields, &it)) {
 
                 if (sz <= 0) {
                     return 0;
@@ -165,6 +168,11 @@ mrkdata_pack_datum(const mrkdata_datum_t *dat, unsigned char *buf, ssize_t sz)
             break;
 
         default:
+            /*
+             * Not supported:
+             *  MRKDATA_DICT
+             *  MRKDATA_FUNC
+             */
             return 0;
 
     }
@@ -216,7 +224,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
     switch (tag) {
         ssize_t nread;
         mrkdata_spec_t **field_spec;
-        list_iter_t it;
+        array_iter_t it;
 
     case MRKDATA_UINT8:
         dat->value.u8 = *buf;
@@ -335,10 +343,10 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         buf += sizeof(int64_t);
         sz -= sizeof(int64_t);
 
-        if (list_init(&dat->data.fields, sizeof(mrkdata_datum_t *), 0,
-                      (list_initializer_t)null_pointer_initializer,
-                      (list_finalizer_t)mrkdata_datum_destroy) != 0) {
-            FAIL("list_init");
+        if (array_init(&dat->data.fields, sizeof(mrkdata_datum_t *), 0,
+                      (array_initializer_t)null_pointer_initializer,
+                      (array_finalizer_t)mrkdata_datum_destroy) != 0) {
+            FAIL("array_init");
         }
 
         if (sz < dat->value.sz64 || dat->value.sz64 < 0) {
@@ -347,9 +355,9 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
 
         dat->packsz += dat->value.sz64;
 
-        for (field_spec = list_first(&spec->fields, &it);
+        for (field_spec = array_first(&spec->fields, &it);
              field_spec != NULL;
-             field_spec = list_next(&spec->fields, &it)) {
+             field_spec = array_next(&spec->fields, &it)) {
 
             mrkdata_datum_t **field_dat;
 
@@ -357,8 +365,8 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
                 return 0;
             }
 
-            if ((field_dat = list_incr(&dat->data.fields)) == NULL) {
-                FAIL("list_incr");
+            if ((field_dat = array_incr(&dat->data.fields)) == NULL) {
+                FAIL("array_incr");
             }
 
             if ((nread = mrkdata_unpack_buf(*field_spec,
@@ -380,10 +388,10 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
         buf += sizeof(int64_t);
         sz -= sizeof(int64_t);
 
-        if (list_init(&dat->data.fields, sizeof(mrkdata_datum_t *), 0,
-                      (list_initializer_t)null_pointer_initializer,
-                      (list_finalizer_t)mrkdata_datum_destroy) != 0) {
-            FAIL("list_init");
+        if (array_init(&dat->data.fields, sizeof(mrkdata_datum_t *), 0,
+                      (array_initializer_t)null_pointer_initializer,
+                      (array_finalizer_t)mrkdata_datum_destroy) != 0) {
+            FAIL("array_init");
         }
 
         if (sz < dat->value.sz64 || dat->value.sz64 < 0) {
@@ -396,15 +404,15 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
 
         dat->packsz += dat->value.sz64;
 
-        field_spec = list_first(&spec->fields, &it);
+        field_spec = array_first(&spec->fields, &it);
 
         nread = 0;
         while (nread < dat->value.sz64 && sz > 0) {
             mrkdata_datum_t **field_dat;
             ssize_t nread_single;
 
-            if ((field_dat = list_incr(&dat->data.fields)) == NULL) {
-                FAIL("list_incr");
+            if ((field_dat = array_incr(&dat->data.fields)) == NULL) {
+                FAIL("array_incr");
             }
 
             if ((nread_single = mrkdata_unpack_buf(*field_spec,
@@ -424,6 +432,11 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
 
 
     default:
+        /*
+         * Not supported:
+         *  MRKDATA_DICT
+         *  MRKDATA_FUNC
+         */
         assert(0);
     }
 
@@ -628,6 +641,11 @@ mrkdata_parse_buf(const unsigned char *buf,
 
 
     default:
+        /*
+         * Not supported:
+         *  MRKDATA_DICT
+         *  MRKDATA_FUNC
+         */
         assert(0);
     }
 
@@ -640,12 +658,12 @@ static int
 spec_dump(mrkdata_spec_t *spec, int lvl)
 {
     LTRACE(lvl, "<spec tag=%s>", MRKDATA_TAG_STR(spec->tag));
-    if (spec->tag == MRKDATA_STRUCT || spec->tag == MRKDATA_SEQ) {
-        list_iter_t it;
+    if (MRKDATA_TAG_CUSTOM(spec->tag)) {
+        array_iter_t it;
         mrkdata_spec_t **field;
-        for (field = list_first(&spec->fields, &it);
+        for (field = array_first(&spec->fields, &it);
              field != NULL;
-             field = list_next(&spec->fields, &it)) {
+             field = array_next(&spec->fields, &it)) {
             spec_dump(*field, lvl + 1);
         }
     }
@@ -663,8 +681,13 @@ mrkdata_spec_destroy(mrkdata_spec_t **spec)
 {
     if (*spec != NULL) {
 
-        if ((*spec)->tag == MRKDATA_STRUCT || (*spec)->tag == MRKDATA_SEQ) {
-            list_fini(&(*spec)->fields);
+        if ((*spec)->name != NULL) {
+            free((*spec)->name);
+            (*spec)->name = NULL;
+        }
+
+        if (MRKDATA_TAG_CUSTOM((*spec)->tag)) {
+            array_fini(&(*spec)->fields);
             free(*spec);
         }
 
@@ -676,7 +699,7 @@ mrkdata_spec_destroy(mrkdata_spec_t **spec)
 mrkdata_spec_t *
 mrkdata_make_spec(mrkdata_tag_t tag)
 {
-    mrkdata_spec_t *spec, **e;
+    mrkdata_spec_t *spec;
 
     if (tag < countof(builtin_specs)) {
         return &builtin_specs[tag];
@@ -685,31 +708,40 @@ mrkdata_make_spec(mrkdata_tag_t tag)
     if ((spec = malloc(sizeof(mrkdata_spec_t))) == NULL) {
         FAIL("malloc");
     }
+    spec->name = NULL;
     spec->tag = tag;
-    if (tag == MRKDATA_STRUCT || tag == MRKDATA_SEQ) {
-        if (list_init(&spec->fields, sizeof(mrkdata_spec_t *), 0,
+    if (MRKDATA_TAG_CUSTOM(tag)) {
+        if (array_init(&spec->fields, sizeof(mrkdata_spec_t *), 0,
                        NULL,
                        NULL) != 0) {
-            FAIL("list_init");
+            FAIL("array_init");
         }
     }
 
-    if ((e = array_incr(&specs)) == NULL) {
-        FAIL("array_incr");
-    }
-    *e = spec;
     return spec;
 }
+
+void
+mrkdata_spec_set_name(mrkdata_spec_t *spec, const char *name)
+{
+    if (spec->name != NULL) {
+        free(spec->name);
+    }
+    if ((spec->name = strdup(name)) == NULL) {
+        FAIL("strdup");
+    }
+}
+
 
 void
 mrkdata_spec_add_field(mrkdata_spec_t *spec, mrkdata_spec_t *field)
 {
     mrkdata_spec_t **e;
 
-    assert(spec->tag == MRKDATA_STRUCT || spec->tag == MRKDATA_SEQ);
+    assert(MRKDATA_TAG_CUSTOM(spec->tag));
 
-    if ((e = list_incr(&spec->fields)) == NULL) {
-        FAIL("list_incr");
+    if ((e = array_incr(&spec->fields)) == NULL) {
+        FAIL("array_incr");
     }
     *e = field;
 }
@@ -818,14 +850,14 @@ mrkdata_datum_from_spec(mrkdata_spec_t *spec, void *v, size_t sz)
         }
         memcpy(res->data.str, v, res->value.sz64);
 
-    } else if (spec->tag == MRKDATA_STRUCT || spec->tag == MRKDATA_SEQ) {
+    } else if (MRKDATA_TAG_CUSTOM(spec->tag)) {
         /* must be set in mrkdata_datum_adjust_packsz */
         res->value.sz64 = 0;
 
-        if (list_init(&res->data.fields, sizeof(mrkdata_datum_t *), 0,
-                      (list_initializer_t)null_pointer_initializer,
-                      (list_finalizer_t)mrkdata_datum_destroy) != 0) {
-            FAIL("list_init");
+        if (array_init(&res->data.fields, sizeof(mrkdata_datum_t *), 0,
+                      (array_initializer_t)null_pointer_initializer,
+                      (array_finalizer_t)mrkdata_datum_destroy) != 0) {
+            FAIL("array_init");
         }
 
 
@@ -847,15 +879,15 @@ ERR:
 static int
 datum_dump(mrkdata_datum_t *dat, int lvl)
 {
-    if (dat->spec->tag == MRKDATA_STRUCT || dat->spec->tag == MRKDATA_SEQ) {
+    if (MRKDATA_TAG_CUSTOM(dat->spec->tag)) {
         mrkdata_datum_t **o;
-        list_iter_t it;
+        array_iter_t it;
 
         LTRACE(lvl, "<datum tag=%s>", MRKDATA_TAG_STR(dat->spec->tag));
 
-        for (o = list_first(&dat->data.fields, &it);
+        for (o = array_first(&dat->data.fields, &it);
              o != NULL;
-             o = list_next(&dat->data.fields, &it)) {
+             o = array_next(&dat->data.fields, &it)) {
             datum_dump(*o, lvl + 1);
         }
     } else {
@@ -944,8 +976,8 @@ datum_fini(mrkdata_datum_t *dat)
                 free(dat->data.str);
                 dat->data.str = NULL;
             }
-        } else if (dat->spec->tag == MRKDATA_STRUCT || dat->spec->tag == MRKDATA_SEQ) {
-            list_fini(&dat->data.fields);
+        } else if (MRKDATA_TAG_CUSTOM(dat->spec->tag)) {
+            array_fini(&dat->data.fields);
         }
 
         dat->spec = NULL;
@@ -971,10 +1003,10 @@ mrkdata_datum_add_field(mrkdata_datum_t *dat, mrkdata_datum_t *field)
 {
     mrkdata_datum_t **pdat;
 
-    assert(dat->spec->tag == MRKDATA_STRUCT || dat->spec->tag == MRKDATA_SEQ);
+    assert(MRKDATA_TAG_CUSTOM(dat->spec->tag));
 
-    if ((pdat = list_incr(&dat->data.fields)) == NULL) {
-        FAIL("list_incr");
+    if ((pdat = array_incr(&dat->data.fields)) == NULL) {
+        FAIL("array_incr");
     }
 
     *pdat = field;
@@ -986,9 +1018,9 @@ mrkdata_datum_get_field(mrkdata_datum_t *dat, unsigned idx)
 {
     mrkdata_datum_t **pfield;
 
-    assert(dat->spec->tag == MRKDATA_STRUCT || dat->spec->tag == MRKDATA_SEQ);
+    assert(MRKDATA_TAG_CUSTOM(dat->spec->tag));
 
-    if ((pfield = list_get(&dat->data.fields, idx)) == NULL) {
+    if ((pfield = array_get(&dat->data.fields, idx)) == NULL) {
         return NULL;
     }
 

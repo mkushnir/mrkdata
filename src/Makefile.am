@@ -1,16 +1,16 @@
 AUTOMAKE_OPTIONS = foreign
 
 distdir = ../$(PACKAGE)-$(VERSION)/src
-dist_HEADERS = mrkdata_private.h fparser_private.h
+dist_HEADERS = mrkdata_private.h
 
 BUILT_SOURCES = diag.c diag.h
 EXTRA_DIST = diag.txt gen-diag
 CLEANFILES = $(BUILT_SOURCES) *.core
 #CLEANFILES += *.in
 
-lib_LTLIBRARIES = libmrkdata.la libfparser.la
+lib_LTLIBRARIES = libmrkdata.la
 
-nobase_include_HEADERS = mrkdata.h fparser.h
+nobase_include_HEADERS = mrkdata.h
 
 if DEBUG
 DEBUG_FLAGS = -g -O0 @CLANG_DEBUG@
@@ -22,11 +22,6 @@ libmrkdata_la_SOURCES = mrkdata.c
 nodist_libmrkdata_la_SOURCES = diag.c
 libmrkdata_la_CFLAGS = $(DEBUG_FLAGS) -Wall -Wextra -Werror -std=c99
 libmrkdata_la_LDFLAGS = -version-info 1
-
-libfparser_la_SOURCES = fparser.c
-nodist_libfparser_la_SOURCES = diag.c
-libfparser_la_CFLAGS = $(DEBUG_FLAGS) -Wall -Wextra -Werror -std=c99
-libfparser_la_LDFLAGS = -version-info 1 -lmrkcommon
 
 SUBDIRS = . test
 
