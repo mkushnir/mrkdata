@@ -21,7 +21,7 @@ testfoo_CFLAGS = $(DEBUG_FLAGS) -Wall -Wextra -Werror -std=c99 -I.. -I$(included
 testfoo_LDFLAGS = -L$(libdir) -lmrkcommon -lmrkdata
 
 ../diag.c ../diag.h: ../diag.txt
-	sh ../gen-diag mrkdata
+	$(AM_V_GEN) /bin/sh ../gen-diag mrkdata
 
 testrun: all
 	for i in $(noinst_PROGRAMS); do if test -x ./$$i; then LD_LIBRARY_PATH=$(libdir) ./$$i; fi; done;
