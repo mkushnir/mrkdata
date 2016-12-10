@@ -41,7 +41,7 @@ tag_sz[] = {
 };
 
 static mrkdata_spec_t builtin_specs[MRKDATA_BUILTIN_TAG_END];
-static array_t specs;
+static mnarray_t specs;
 
 #define EXPECT_SZ(t) ((ssize_t)(sizeof(char) + tag_sz[t]))
 #define EXPECT_EXTERNAL (-1)
@@ -83,7 +83,7 @@ mrkdata_pack_datum(const mrkdata_datum_t *dat, unsigned char *buf, ssize_t sz)
     switch (dat->spec->tag) {
         ssize_t nwritten;
         mrkdata_datum_t **field;
-        array_iter_t it;
+        mnarray_iter_t it;
 
         case MRKDATA_UINT8:
             *((uint8_t *)buf) = dat->value.u8;
@@ -224,7 +224,7 @@ mrkdata_unpack_buf(const mrkdata_spec_t *spec,
     switch (tag) {
         ssize_t nread;
         mrkdata_spec_t **field_spec;
-        array_iter_t it;
+        mnarray_iter_t it;
 
     case MRKDATA_UINT8:
         dat->value.u8 = *buf;
@@ -659,7 +659,7 @@ spec_dump(mrkdata_spec_t *spec, int lvl)
 {
     LTRACE(lvl, "<spec tag=%s>", MRKDATA_TAG_STR(spec->tag));
     if (MRKDATA_TAG_CUSTOM(spec->tag)) {
-        array_iter_t it;
+        mnarray_iter_t it;
         mrkdata_spec_t **field;
         for (field = array_first(&spec->fields, &it);
              field != NULL;
@@ -881,7 +881,7 @@ datum_dump(mrkdata_datum_t *dat, int lvl)
 {
     if (MRKDATA_TAG_CUSTOM(dat->spec->tag)) {
         mrkdata_datum_t **o;
-        array_iter_t it;
+        mnarray_iter_t it;
 
         LTRACE(lvl, "<datum tag=%s>", MRKDATA_TAG_STR(dat->spec->tag));
 

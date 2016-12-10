@@ -76,7 +76,7 @@ typedef struct _mrkdata_spec {
      * parameters
      */
     char *name;
-    array_t fields;
+    mnarray_t fields;
     mrkdata_tag_t tag;
 } mrkdata_spec_t;
 
@@ -99,7 +99,7 @@ typedef struct _mrkdata_datum {
     } value;
     union {
         char *str;
-        array_t fields;
+        mnarray_t fields;
     } data;
     ssize_t packsz;
     struct _mrkdata_datum *parent;
