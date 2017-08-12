@@ -2,15 +2,15 @@
 #include <netinet/in.h>
 #include <sys/endian.h>
 
-#include "mrkcommon/array.h"
+#include <mrkcommon/array.h>
 //#define TRRET_DEBUG
-#include "mrkcommon/dumpm.h"
-#include "mrkcommon/util.h"
+#include <mrkcommon/dumpm.h>
+#include <mrkcommon/util.h>
 
 #include "diag.h"
 #include "mrkdata_private.h"
 
-#include "mrkcommon/memdebug.h"
+#include <mrkcommon/memdebug.h>
 MEMDEBUG_DECLARE(mrkdata);
 
 #define MRKDATA_MFLAG_INITIALIZED (0x01)
