@@ -66,7 +66,7 @@ typedef enum _mrkdata_tag {
      tag == MRKDATA_SEQ ? "SEQ" : \
      tag == MRKDATA_DICT ? "DICT" : \
      tag == MRKDATA_FUNC ? "FUNC" : \
-     "")
+     "<unknown>")
 
 struct _mrkdata_datum;
 

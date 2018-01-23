@@ -9,5 +9,5 @@ extern "C" {
 }
 #endif
 
-#include "mrkdata.h"
+#include <mrkdata.h>
 #endif
